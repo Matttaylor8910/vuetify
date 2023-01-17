@@ -286,12 +286,15 @@ export default baseMixins.extend<options>().extend({
 
   methods: {
     /** @public */
-    blur (e?: Event) {
+    blur (e?: Event, fromTab?: boolean) {
       VTextField.options.methods.blur.call(this, e)
       this.isMenuActive = false
       this.isFocused = false
       this.selectedIndex = -1
       this.setMenuIndex(-1)
+
+      // to prevent the blur event emitting twice when tabbing out of a VSelect, ignore that event
+      if (!fromTab) this.onBlur(e)
     },
     /** @public */
     activateMenu () {
@@ -599,7 +602,9 @@ export default baseMixins.extend<options>().extend({
       return getPropertyFromItem(item, this.itemValue, this.getText(item))
     },
     onBlur (e?: Event) {
-      e && this.$emit('blur', e)
+      if (!this.isFocused) {
+        e && this.$emit('blur', e)
+      }
     },
     onChipInput (item: object) {
       if (this.multiple) this.selectItem(item)
@@ -786,7 +791,7 @@ export default baseMixins.extend<options>().extend({
         // If we make it here,
         // the user has no selected indexes
         // and is probably tabbing out
-        this.blur(e)
+        this.blur(e, true)
       }
     },
     onUpDown (e: KeyboardEvent) {
